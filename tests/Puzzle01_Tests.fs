@@ -8,5 +8,8 @@ open Solutions
 module Puzzle01Test =
     [<Fact>]
     let ``Puzzle01a returns correct result``() =
-        let result = [ "1"; "2" ] |> Puzzle01a.solve
-        Assert.Equal(result, 3)
+        Assert.Equal ([ "12" ] |> Puzzle01a.solve, 2L)
+        Assert.Equal ([ "14" ] |> Puzzle01a.solve, 2L)
+        Assert.Equal ([ "1969" ] |> Puzzle01a.solve, 654L)
+        Assert.Equal ([ "100756" ] |> Puzzle01a.solve, 33583L)
+        Assert.Equal ([ "12"; "14" ] |> Puzzle01a.solve, 4L)
