@@ -7,7 +7,10 @@ SOLUTION_FILE_TEMPLATE = """namespace Solutions
 open System
 
 module #### =
-    let solve (input: string list) = 1"""
+    let solveA (input: string list) = 1
+
+    let solveB (input: string list) = 1
+"""
 
 TESTS_FILE_TEMPLATE = """namespace Tests
 
@@ -18,9 +21,14 @@ open Solutions
 
 module ####Test =
     [<Fact>]
-    let ``#### returns correct result``() =
-        let result = [ ] |> ####.solve
-        Assert.Equal(result, 1)
+    let ``####A returns correct result``() =
+        let result = [ ] |> ####.solveA
+        Assert.Equal(1, result)
+
+    [<Fact>]
+    let ``####B returns correct result``() =
+        let result = [ ] |> ####.solveB
+        Assert.Equal(1, result)
 """
 
 SOLUTION_DIR = os.path.join(os.path.dirname(__file__), "solutions")
