@@ -53,11 +53,37 @@ module Puzzle02 =
 
     let solveA (input: string list) =
         let realInput = input |> Seq.head
+
         let ints =
             realInput.Split [| ',' |]
             |> Seq.map int
             |> Seq.toList
-        let x = Seq.append (Seq.append [Seq.head ints] [12; 2]) (Seq.skip 3 ints)
+
+        let x = Seq.append (Seq.append [ Seq.head ints ] [ 12; 2 ]) (Seq.skip 3 ints)
         String.Join(",", parse x)
 
-    let solveB (input: string list) = 1
+    let solveB (input: string list) =
+        let realInput = input |> Seq.head
+
+        let ints =
+            realInput.Split [| ',' |]
+            |> Seq.map int
+            |> Seq.toList
+
+        let target = 19690720
+
+        let candidates =
+            seq {
+                for noun in 0 .. 1 .. 99 do
+                    for verb in 0 .. 1 .. 99 do
+                        yield (noun, verb)
+            }
+
+        let (noun, verb) =
+            candidates
+            |> Seq.find (fun (noun, verb) ->
+                let x = Seq.append (Seq.append [ Seq.head ints ] [ noun; verb ]) (Seq.skip 3 ints)
+                let result = parse x
+                result.[0] = target)
+
+        100 * noun + verb
