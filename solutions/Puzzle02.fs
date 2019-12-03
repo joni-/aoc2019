@@ -51,25 +51,26 @@ module Puzzle02 =
                 | Halt -> acc
         apply 0 (Seq.toArray input)
 
+    let parseInput (input: string list) =
+        let actualInput = input |> Seq.head
+        actualInput.Split [| ',' |] |> Seq.map int
+
+    let updateInitialMemory (v1: int) (v2: int) (input: int seq) =
+        Seq.append (Seq.append [ Seq.head input ] [ v1; v2 ]) (Seq.skip 3 input)
+
+    let solveANoReplace (input: string list) =
+        let memory = input |> parseInput
+        String.Join(",", parse memory)
+
     let solveA (input: string list) =
-        let realInput = input |> Seq.head
-
-        let ints =
-            realInput.Split [| ',' |]
-            |> Seq.map int
-            |> Seq.toList
-
-        let x = Seq.append (Seq.append [ Seq.head ints ] [ 12; 2 ]) (Seq.skip 3 ints)
-        String.Join(",", parse x)
+        let memory =
+            input
+            |> parseInput
+            |> updateInitialMemory 12 2
+        String.Join(",", parse memory)
 
     let solveB (input: string list) =
-        let realInput = input |> Seq.head
-
-        let ints =
-            realInput.Split [| ',' |]
-            |> Seq.map int
-            |> Seq.toList
-
+        let initialMemory = input |> parseInput
         let target = 19690720
 
         let candidates =
@@ -82,8 +83,8 @@ module Puzzle02 =
         let (noun, verb) =
             candidates
             |> Seq.find (fun (noun, verb) ->
-                let x = Seq.append (Seq.append [ Seq.head ints ] [ noun; verb ]) (Seq.skip 3 ints)
-                let result = parse x
+                let memory = initialMemory |> updateInitialMemory noun verb
+                let result = parse memory
                 result.[0] = target)
 
         100 * noun + verb
