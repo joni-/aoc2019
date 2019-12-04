@@ -10,6 +10,7 @@
   <ItemGroup>
     <Compile Include="Puzzle01_Tests.fs" />
     <Compile Include="Puzzle02_Tests.fs" />
+    <Compile Include="Puzzle03_Tests.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
 
