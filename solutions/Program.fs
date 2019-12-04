@@ -5,9 +5,8 @@ open Solutions
 
 [<EntryPoint>]
 let main argv =
-    printfn "Hello World from F#!"
-    let path = IO.Path.Combine(__SOURCE_DIRECTORY__, "inputs", "Puzzle02.input")
+    let path = IO.Path.Combine(__SOURCE_DIRECTORY__, "inputs", "Puzzle04.input")
     let input = path |> IO.File.ReadAllLines |> Seq.toList
-    // let input = ["1,1,1,4,99,5,6,0,99"]
-    printfn "%A" (Puzzle02.solveB input)
+    // let input = ["357253-892942"]
+    printfn "%A" (Puzzle04.solveA input)
     0 // return an integer exit code
