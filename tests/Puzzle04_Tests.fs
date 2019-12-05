@@ -6,12 +6,9 @@ open Xunit
 open Solutions
 
 module Puzzle04Test =
-    // [<Fact>]
-    // let ``Puzzle04A returns correct result``() =
-    //     let result = [ ] |> Puzzle04.solveA
-    //     Assert.Equal(1, result)
 
     [<Fact>]
-    let ``Puzzle04B returns correct result``() =
-        let result = [ ] |> Puzzle04.solveB
-        Assert.Equal(1, result)
+    let ``solveA returns correct result``() = Assert.Equal(530, [ "357253-892942" ] |> Puzzle04.solveA)
+
+    [<Fact>]
+    let ``solveB returns correct result``() = Assert.Equal(324, [ "357253-892942" ] |> Puzzle04.solveB)
