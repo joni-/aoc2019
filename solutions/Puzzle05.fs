@@ -19,11 +19,19 @@ module Puzzle05 =
     type Output =
         { Position: int }
 
+    type Jump =
+        { Predicate: Parameter
+          To: Parameter }
+
     type Operation =
         | Add of Parameters
         | Multiply of Parameters
         | Save of Input
         | Output of Output
+        | JumpIfTrue of Jump
+        | JumpIfFalse of Jump
+        | LessThan of Parameters
+        | Equals of Parameters
         | Halt
 
     let parseParameters (memory: int array) (index: int) (instruction: int) =
@@ -84,6 +92,52 @@ module Puzzle05 =
                   Right = right
                   Output = memory.[index + 3] }
 
+        | 5
+        | 105
+        | 1005
+        | 1015
+        | 1105
+        | 1115 ->
+            let left, right = parseParameters memory index instruction
+            JumpIfTrue
+                { Predicate = left
+                  To = right }
+
+        | 6
+        | 106
+        | 1006
+        | 1016
+        | 1106
+        | 1116 ->
+            let left, right = parseParameters memory index instruction
+            JumpIfFalse
+                { Predicate = left
+                  To = right }
+
+        | 7
+        | 107
+        | 1007
+        | 1017
+        | 1107
+        | 1117 ->
+            let left, right = parseParameters memory index instruction
+            LessThan
+                { Left = left
+                  Right = right
+                  Output = memory.[index + 3] }
+
+        | 8
+        | 108
+        | 1008
+        | 1018
+        | 1108
+        | 1118 ->
+            let left, right = parseParameters memory index instruction
+            Equals
+                { Left = left
+                  Right = right
+                  Output = memory.[index + 3] }
+
         | _ ->
             instruction
             |> sprintf "Invalid operation number: %A"
@@ -118,6 +172,26 @@ module Puzzle05 =
                 | Save input ->
                     acc.[input.Position] <- input.Value
                     apply (i + 2) acc outputs
+                | JumpIfTrue cmd ->
+                    if getFromMemory cmd.Predicate <> 0 then
+                        let jumpTo = getFromMemory cmd.To
+                        apply jumpTo acc outputs
+                    else
+                        apply (i + 3) acc outputs
+                | JumpIfFalse cmd ->
+                    if getFromMemory cmd.Predicate = 0 then
+                        let jumpTo = getFromMemory cmd.To
+                        apply jumpTo acc outputs
+                    else
+                        apply (i + 3) acc outputs
+                | LessThan cmd ->
+                    if getFromMemory cmd.Left < getFromMemory cmd.Right then acc.[cmd.Output] <- 1
+                    else acc.[cmd.Output] <- 0
+                    apply (i + 4) acc outputs
+                | Equals cmd ->
+                    if getFromMemory cmd.Left = getFromMemory cmd.Right then acc.[cmd.Output] <- 1
+                    else acc.[cmd.Output] <- 0
+                    apply (i + 4) acc outputs
                 | Output output ->
                     let outputValue = acc.[output.Position]
                     apply (i + 2) acc (List.append outputs [ outputValue ])
@@ -136,4 +210,8 @@ module Puzzle05 =
         |> parseOutput 1
         |> snd
 
-    let solveB (input: string list) = 1
+    let solveB (input: string list) =
+        input
+        |> List.head
+        |> parseOutput 5
+        |> snd
