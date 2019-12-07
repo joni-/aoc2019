@@ -17,7 +17,7 @@ module Puzzle05 =
           Position: int }
 
     type Output =
-        { Position: int }
+        { Position: Parameter }
 
     type Jump =
         { Predicate: Parameter
@@ -66,8 +66,8 @@ module Puzzle05 =
             Save
                 { Value = getInput()
                   Position = memory.[index + 1] }
-        | 4
-        | 104 -> Output { Position = memory.[index + 1] }
+        | 4 -> Output { Position = Position memory.[index + 1] }
+        | 104 -> Output { Position = Immediate memory.[index + 1] }
         | 99 -> Halt
 
         | 1
@@ -195,8 +195,8 @@ module Puzzle05 =
                     else acc.[cmd.Output] <- 0
                     apply (i + 4) acc outputs
                 | Output output ->
-                    let outputValue = acc.[output.Position]
-                    apply (i + 2) acc (List.append outputs [ outputValue ])
+                    let v = getFromMemory output.Position
+                    apply (i + 2) acc (List.append outputs [ v ])
                 | Halt -> acc, outputs
         apply 0 (Seq.toArray input) List.empty
 
