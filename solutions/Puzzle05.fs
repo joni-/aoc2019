@@ -34,6 +34,8 @@ module Puzzle05 =
         | Equals of Parameters
         | Halt
 
+    type GetInput = unit -> int
+
     let parseParameters (memory: int array) (index: int) (instruction: int) =
         let left =
             match instruction / 100 % 10 with
@@ -58,11 +60,11 @@ module Puzzle05 =
         left, right
 
 
-    let parseOperation (inputOperationValue: int) (memory: int array) (index: int) (instruction: int) =
+    let parseOperation (getInput: GetInput) (memory: int array) (index: int) (instruction: int) =
         match instruction with
         | 3 ->
             Save
-                { Value = inputOperationValue
+                { Value = getInput()
                   Position = memory.[index + 1] }
         | 4
         | 104 -> Output { Position = memory.[index + 1] }
@@ -149,12 +151,12 @@ module Puzzle05 =
         | Position i -> memory.[i]
         | Immediate v -> v
 
-    let parse (inputOperationValue: int) (input: int seq) =
+    let parse (getInput: GetInput) (input: int seq) =
         let rec apply (i: int) (acc: int array) (outputs: int list) =
             if i >= acc.Length then
                 acc, outputs
             else
-                let op = parseOperation inputOperationValue acc i acc.[i]
+                let op = parseOperation getInput acc i acc.[i]
                 let getFromMemory = getValue acc
                 match op with
                 | Add p ->
@@ -199,19 +201,32 @@ module Puzzle05 =
         apply 0 (Seq.toArray input) List.empty
 
 
-    let parseOutput (inputOperationValue: int) (input: string) =
+    let parseOutput (inputs: int list) (input: string) =
+        let inputReader =
+            (fun _ ->
+            let mutable inputsLeft = inputs
+            (fun _ ->
+            match inputsLeft |> List.tryHead with
+            | Some v ->
+                inputsLeft <- List.tail inputsLeft
+                v
+            | None ->
+                "No more inputs left."
+                |> Exception
+                |> raise))
+
         input.Split [| ',' |]
         |> Seq.map int
-        |> parse inputOperationValue
+        |> parse (inputReader())
 
     let solveA (input: string list) =
         input
         |> List.head
-        |> parseOutput 1
+        |> parseOutput [ 1 ]
         |> snd
 
     let solveB (input: string list) =
         input
         |> List.head
-        |> parseOutput 5
+        |> parseOutput [ 5 ]
         |> snd

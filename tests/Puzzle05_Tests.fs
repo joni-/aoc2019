@@ -11,12 +11,12 @@ module Puzzle05Test =
         Assert.Equal<int list>
             ([ 1 ],
              "3,0,4,0,99"
-             |> Puzzle05.parseOutput 1
+             |> Puzzle05.parseOutput [1]
              |> snd)
         Assert.Equal<int list>
             ([ 2 ],
              "3,0,4,0,99"
-             |> Puzzle05.parseOutput 2
+             |> Puzzle05.parseOutput [2]
              |> snd)
 
 // [<Fact>]
