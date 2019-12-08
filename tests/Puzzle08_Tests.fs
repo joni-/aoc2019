@@ -31,13 +31,3 @@ module Puzzle08Test =
         let expected = [ expectedLayer1; expectedLayer2 ]
 
         Assert.Equal<int list list list>(expected, result)
-
-    [<Fact>]
-    let ``Puzzle08A returns correct result``() =
-        let result = [] |> Puzzle08.solveA
-        Assert.Equal(1, result)
-
-    [<Fact>]
-    let ``Puzzle08B returns correct result``() =
-        let result = [] |> Puzzle08.solveB
-        Assert.Equal(1, result)

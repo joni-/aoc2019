@@ -48,6 +48,10 @@ module Puzzle08 =
         let layerIndexWithFewestDigits = digitCountByLayer |> List.findIndex (fun count -> count = minDigitCount)
         layers |> List.item layerIndexWithFewestDigits
 
+    let firstNonTransparentPixel (row: int) (col: int) (layers: int array array array) =
+        let layer = layers |> Array.find (fun layer -> layer.[row].[col] <> 2)
+        layer.[row].[col]
+
     let solveA (input: string list) =
         let layer =
             input
@@ -60,4 +64,36 @@ module Puzzle08 =
         let twos = layer |> countDigits 2
         ones * twos
 
-    let solveB (input: string list) = 1
+    let solveB (input: string list) =
+        let width, height = 25, 6
+
+        let layers =
+            input
+            |> List.head
+            |> createLayers width height
+            |> List.map (fun layer ->
+                layer
+                |> List.map (fun row -> row |> List.toArray)
+                |> List.toArray)
+            |> List.toArray
+
+
+        let pixels =
+            seq {
+                for row in 0 .. height - 1 do
+                    for col in 0 .. width - 1 -> row, col
+            }
+
+        let result =
+            pixels
+            |> Seq.map
+                ((fun (row, col) -> layers |> firstNonTransparentPixel row col)
+                 >> string
+                 >> (fun s ->
+                 // Replace zeros with space for better visualisation of the result
+                 if s = "0" then " "
+                 else s))
+            |> Seq.chunkBySize width
+            |> Seq.map String.Concat
+
+        String.Join("\n", result)
