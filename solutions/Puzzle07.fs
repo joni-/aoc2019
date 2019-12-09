@@ -5,7 +5,7 @@ open System
 module Puzzle07 =
     let amplify (phase: int) (inputSignal: int) (memory: string) =
         memory
-        |> Puzzle05.parseOutput [ phase; inputSignal ]
+        |> Intcode.parseOutput [ phase; inputSignal ]
         |> snd
         |> List.last
 
