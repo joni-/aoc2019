@@ -11,4 +11,9 @@ module Puzzle09 =
         |> List.head
 
 
-    let solveB (input: string list) = 1
+    let solveB (input: string list) =
+        input
+        |> List.head
+        |> Intcode.parseOutput [ 2L ]
+        |> snd
+        |> List.head
