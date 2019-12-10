@@ -8,13 +8,13 @@ open Solutions
 module IntcodeTest =
     [<Fact>]
     let ``Parse returns correct output``() =
-        Assert.Equal<int list>
-            ([ 1 ],
+        Assert.Equal<int64 list>
+            ([ 1L ],
              "3,0,4,0,99"
-             |> Intcode.parseOutput [1]
+             |> Intcode.parseOutput [1L]
              |> snd)
-        Assert.Equal<int list>
-            ([ 2 ],
+        Assert.Equal<int64 list>
+            ([ 2L ],
              "3,0,4,0,99"
-             |> Intcode.parseOutput [2]
+             |> Intcode.parseOutput [2L]
              |> snd)

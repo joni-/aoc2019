@@ -15,6 +15,7 @@
     <Compile Include="Puzzle07_Tests.fs" />
     <Compile Include="Puzzle08_Tests.fs" />
     <Compile Include="Incode_Tests.fs" />
+    <Compile Include="Puzzle09_Tests.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
   <ItemGroup>

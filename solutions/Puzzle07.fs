@@ -3,18 +3,18 @@ namespace Solutions
 open System
 
 module Puzzle07 =
-    let amplify (phase: int) (inputSignal: int) (memory: string) =
+    let amplify (phase: int64) (inputSignal: int64) (memory: string) =
         memory
         |> Intcode.parseOutput [ phase; inputSignal ]
         |> snd
         |> List.last
 
-    let trusterSignal (memory: string) (phaseSettings: int list) =
-        phaseSettings |> List.fold (fun output phase -> amplify phase output memory) 0
+    let trusterSignal (memory: string) (phaseSettings: int64 list) =
+        phaseSettings |> List.fold (fun output phase -> amplify phase output memory) 0L
 
     let solveA (input: string list) =
         let memory = input |> List.head
-        let l = [ 0; 1; 2; 3; 4 ] // phase settings
+        let l = [ 0L; 1L; 2L; 3L; 4L ] // phase settings
 
         let combinations =
             List.collect

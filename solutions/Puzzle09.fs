@@ -2,15 +2,13 @@ namespace Solutions
 
 open System
 
-module Puzzle05 =
+module Puzzle09 =
     let solveA (input: string list) =
         input
         |> List.head
         |> Intcode.parseOutput [ 1L ]
         |> snd
-
-    let solveB (input: string list) =
-        input
         |> List.head
-        |> Intcode.parseOutput [ 5L ]
-        |> snd
+
+
+    let solveB (input: string list) = 1
