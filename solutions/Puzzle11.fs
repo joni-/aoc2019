@@ -14,78 +14,7 @@ module Puzzle11 =
         | LEFT -> { coordinate with x = coordinate.x - amount }
         | RIGHT -> { coordinate with x = coordinate.x + amount }
 
-    let runA (initialMemory: int64 array) =
-        let rec helper (memory: int64 array) (extraMemory: int64 array) (index: int) (relativeBase: int)
-                (panelColors: Map<Coordinate, Color>) (instructions: (Coordinate * Color) list) (position: Coordinate)
-                (direction: Direction) =
-            let currentPanelColor =
-                match panelColors |> Map.tryFind position with
-                | Some c -> c
-                | None -> BLACK
-
-            let inputReader =
-                (fun _ ->
-                if currentPanelColor = BLACK then 0L
-                else 1L)
-
-            let intcodeResult = Intcode.parseOutput memory extraMemory index inputReader relativeBase
-
-            if List.isEmpty intcodeResult.Outputs then
-                instructions
-            else
-                let paintColor =
-                    match intcodeResult.Outputs |> List.head with
-                    | 0L -> BLACK
-                    | 1L -> WHITE
-                    | _ ->
-                        sprintf "Invalid output color: %A" intcodeResult.Outputs
-                        |> Exception
-                        |> raise
-
-                // Paint the current position
-                let newInstructions = [ position, paintColor ] |> List.append instructions
-                let newPanelColors = panelColors |> Map.add position paintColor
-
-                // printfn "Paint %A with %A" position paintColor
-
-                let nextDirection =
-                    match intcodeResult.Outputs
-                          |> List.tail
-                          |> List.head with
-                    | 0L ->
-                        match direction with
-                        | UP -> LEFT
-                        | DOWN -> RIGHT
-                        | LEFT -> DOWN
-                        | RIGHT -> UP
-                    | 1L ->
-                        match direction with
-                        | UP -> RIGHT
-                        | DOWN -> LEFT
-                        | LEFT -> UP
-                        | RIGHT -> DOWN
-                    | _ ->
-                        sprintf "Invalid output turn direction: %A" intcodeResult.Outputs
-                        |> Exception
-                        |> raise
-
-                let nextPosition = move position 1 nextDirection
-
-                // // TODO: refactor so no need to concat back to str
-                // let a = fst intcodeResult
-                // let updatedMemory = String.Join(",", a)
-
-                helper intcodeResult.Memory intcodeResult.ExtraMemory intcodeResult.CurrentIndex
-                    intcodeResult.RelativeBase newPanelColors newInstructions nextPosition nextDirection
-
-        let instructions =
-            helper initialMemory (Array.zeroCreate 1000000) 0 0 Map.empty List.empty
-                { x = 0
-                  y = 0 } UP
-
-        instructions
-
-    let runB (initialMemory: int64 array) =
+    let run (initialPanelColors: Map<Coordinate, Color>) (initialMemory: int64 array) =
         let rec helper (memory: int64 array) (extraMemory: int64 array) (index: int) (relativeBase: int)
                 (panelColors: Map<Coordinate, Color>) (instructions: (Coordinate * Color) list) (position: Coordinate)
                 (direction: Direction) =
@@ -117,8 +46,6 @@ module Puzzle11 =
                 let newInstructions = [ position, paintColor ] |> List.append instructions
                 let newPanelColors = panelColors |> Map.add position paintColor
 
-                // printfn "Paint %A with %A" position paintColor
-
                 let nextDirection =
                     match intcodeResult.Outputs
                           |> List.tail
@@ -144,22 +71,17 @@ module Puzzle11 =
                 helper intcodeResult.Memory intcodeResult.ExtraMemory intcodeResult.CurrentIndex
                     intcodeResult.RelativeBase newPanelColors newInstructions nextPosition nextDirection
 
-        let instructions =
-            helper initialMemory (Array.zeroCreate 1000000) 0 0
-                (Map.ofList
-                    [ { x = 0
-                        y = 0 }, WHITE ]) List.empty
-                { x = 0
-                  y = 0 } UP
-
-        instructions
+        helper initialMemory (Array.zeroCreate 1000000) 0 0 initialPanelColors List.empty
+            { x = 0
+              y = 0 } UP
 
     let solveA (input: string list) =
         input
         |> List.head
         |> (fun s -> s.Split [| ',' |])
         |> Array.map int64
-        |> runA
+        |> run Map.empty
+        |> snd
         |> List.map (fun (c, _) -> c)
         |> Set.ofList
         |> Set.count
@@ -170,7 +92,10 @@ module Puzzle11 =
             |> List.head
             |> (fun s -> s.Split [| ',' |])
             |> Array.map int64
-            |> runB
+            |> run
+                (Map.ofList
+                    [ { x = 0
+                        y = 0 }, WHITE ])
 
         let coordinates =
             result
