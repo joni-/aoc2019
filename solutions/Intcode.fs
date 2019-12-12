@@ -43,6 +43,13 @@ module Intcode =
 
     type GetInput = unit -> int64
 
+    type Result =
+        { Outputs: int64 list
+          Memory: int64 array
+          ExtraMemory: int64 array
+          CurrentIndex: int
+          RelativeBase: int }
+
     let parseParameter (memory: int64 array) (index: int) (paramMode: int) =
         match paramMode with
         | 0 -> Parameter.Position(int memory.[index])
@@ -177,21 +184,38 @@ module Intcode =
         | Position i -> int i
         | Relative i -> relativeBase + int i
 
-    let saveIntoMemory (memory: int64 array) (extraMemory: int64 array) (relativeBase: int) (position: InputParameter) (value: int64) =
+    let saveIntoMemory (memory: int64 array) (extraMemory: int64 array) (relativeBase: int) (position: InputParameter)
+        (value: int64) =
         // printfn "  Saving value %A to position %A" value position
         let p = getPosition relativeBase position
         if p >= memory.Length then extraMemory.[p] <- value
         else memory.[p] <- value
 
-    let parse (getInput: GetInput) (input: int64 seq) =
+    let parse (getInput: GetInput) (initialMemory: int64 array) (initialExtraMemory: int64 array) (initialIndex: int)
+        (initialRelativeBase: int) =
         let rec apply (i: int) (acc: int64 array) (extraMemory: int64 array) (outputs: int64 list) (relativeBase: int) =
             // printfn "%A, %A" acc
             // printfn "  -- Outputs: %A" outputs
 
+            // Threading.Thread.Sleep(100)
+
+            // printfn "Current memory index: %A" i
+
             if i >= acc.Length then
-                acc, outputs
+                { Outputs = outputs
+                  Memory = acc
+                  ExtraMemory = extraMemory
+                  CurrentIndex = i + 1
+                  RelativeBase = relativeBase }
+            elif outputs.Length = 2 then
+                { Outputs = outputs
+                  Memory = acc
+                  ExtraMemory = extraMemory
+                  CurrentIndex = i
+                  RelativeBase = relativeBase }
             else
                 let op = parseOperation getInput acc i (int acc.[i])
+                // printfn "  Do: %A" op
                 // printfn "  -- Next Operation (%A): %A" acc.[i] op
                 let getFromMemory = getValue acc extraMemory relativeBase
                 let save = saveIntoMemory acc extraMemory relativeBase
@@ -237,28 +261,21 @@ module Intcode =
                     apply (i + 4) acc extraMemory outputs relativeBase
                 | Output output ->
                     let v = getFromMemory output.Position
+                    // printfn "  -> Output: %A" v
                     apply (i + 2) acc extraMemory (List.append outputs [ v ]) relativeBase
                 | AdjustRelativeBase p ->
                     let v = getFromMemory p |> int
                     apply (i + 2) acc extraMemory outputs (relativeBase + v)
-                | Halt -> acc, outputs
-        apply 0 (Seq.toArray input) (Array.zeroCreate 10000000) List.empty 0
+                | Halt ->
+                    // acc, outputs
+                    { Outputs = outputs
+                      Memory = acc
+                      ExtraMemory = extraMemory
+                      CurrentIndex = i + 1
+                      RelativeBase = relativeBase }
+
+        apply initialIndex initialMemory initialExtraMemory List.empty initialRelativeBase
 
 
-    let parseOutput (inputs: int64 list) (input: string) =
-        let inputReader =
-            (fun _ ->
-            let mutable inputsLeft = inputs
-            (fun _ ->
-            match inputsLeft |> List.tryHead with
-            | Some v ->
-                inputsLeft <- List.tail inputsLeft
-                v
-            | None ->
-                "No more inputs left."
-                |> Exception
-                |> raise))
-
-        input.Split [| ',' |]
-        |> Seq.map int64
-        |> parse (inputReader())
+    let parseOutput (memory: int64 array) (extraMemory: int64 array) (index: int) (inputReader: GetInput)
+        (relativeBase: int) = parse inputReader memory extraMemory index relativeBase

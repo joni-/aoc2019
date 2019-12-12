@@ -4,9 +4,8 @@ open System
 
 module Puzzle07 =
     let amplify (phase: int64) (inputSignal: int64) (memory: string) =
-        memory
-        |> Intcode.parseOutput [ phase; inputSignal ]
-        |> snd
+        [ memory ]
+        |> Shared.simpleIntcodeRun [ phase; inputSignal ]
         |> List.last
 
     let trusterSignal (memory: string) (phaseSettings: int64 list) =

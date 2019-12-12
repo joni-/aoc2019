@@ -1,9 +1,9 @@
 namespace Tests
 
-open System
-open Xunit
+// open System
+// open Xunit
 
-open Solutions
+// open Solutions
 
 // module Puzzle05Test =
 // [<Fact>]
