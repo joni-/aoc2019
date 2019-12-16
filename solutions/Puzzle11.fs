@@ -28,7 +28,7 @@ module Puzzle11 =
                 if currentPanelColor = BLACK then 0L
                 else 1L)
 
-            let intcodeResult = Intcode.parseOutput memory extraMemory index inputReader relativeBase
+            let intcodeResult = Intcode.run memory extraMemory index inputReader relativeBase
 
             if List.isEmpty intcodeResult.Outputs then
                 panelColors, instructions

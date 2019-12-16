@@ -277,5 +277,5 @@ module Intcode =
         apply initialIndex initialMemory initialExtraMemory List.empty initialRelativeBase
 
 
-    let parseOutput (memory: int64 array) (extraMemory: int64 array) (index: int) (inputReader: GetInput)
+    let run (memory: int64 array) (extraMemory: int64 array) (index: int) (inputReader: GetInput)
         (relativeBase: int) = parse inputReader memory extraMemory index relativeBase

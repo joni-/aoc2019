@@ -34,7 +34,7 @@ module Shared =
                 |> raise))
 
         let memory = input |> parseIntcodeInput
-        Intcode.parseOutput memory (Array.zeroCreate 0) 0 (inputReader()) 0 |> (fun r -> r.Outputs)
+        Intcode.run memory (Array.zeroCreate 0) 0 (inputReader()) 0 |> (fun r -> r.Outputs)
 
     let simpleIntcodeRunReturnMemory (inputs: int64 list) (input: string list) =
         let inputReader =
@@ -51,4 +51,4 @@ module Shared =
                 |> raise))
 
         let memory = input |> parseIntcodeInput
-        Intcode.parseOutput memory (Array.zeroCreate 0) 0 (inputReader()) 0 |> (fun r -> r.Memory)
+        Intcode.run memory (Array.zeroCreate 0) 0 (inputReader()) 0 |> (fun r -> r.Memory)
