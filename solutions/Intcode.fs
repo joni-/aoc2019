@@ -43,7 +43,7 @@ module Intcode =
 
     type GetInput = unit -> int64
 
-    type Result =
+    type State =
         { Outputs: int64 list
           Memory: int64 array
           ExtraMemory: int64 array
@@ -75,11 +75,13 @@ module Intcode =
         else
             Position p
 
-    let parseOperation (getInput: GetInput) (memory: int64 array) (index: int) (instruction: int) =
+    let parseOperation (getInput: GetInput) (state: State) (instruction: int) =
         let instructionList =
             instruction.ToString().ToCharArray()
             |> Array.toList
             |> List.map (string >> int)
+
+        let { Memory = memory; CurrentIndex = index } = state
         match instructionList with
         | [ 3 ] ->
             Save
@@ -175,8 +177,7 @@ module Intcode =
                     |> Exception
                     |> raise
                 |> int
-            if position >= memory.Length then extraMemory.[position]
-            else memory.[position]
+            if position >= memory.Length then extraMemory.[position] else memory.[position]
 
 
     let getPosition (relativeBase: int) (p: InputParameter) =
@@ -184,98 +185,87 @@ module Intcode =
         | Position i -> int i
         | Relative i -> relativeBase + int i
 
-    let saveIntoMemory (memory: int64 array) (extraMemory: int64 array) (relativeBase: int) (position: InputParameter)
-        (value: int64) =
-        // printfn "  Saving value %A to position %A" value position
-        let p = getPosition relativeBase position
-        if p >= memory.Length then extraMemory.[p] <- value
-        else memory.[p] <- value
+    let saveIntoMemory (state: State) (position: InputParameter) (value: int64) =
+        let p = getPosition state.RelativeBase position
+        if p >= state.Memory.Length then state.ExtraMemory.[p] <- value else state.Memory.[p] <- value
 
-    let parse (getInput: GetInput) (initialMemory: int64 array) (initialExtraMemory: int64 array) (initialIndex: int)
-        (initialRelativeBase: int) =
-        let rec apply (i: int) (acc: int64 array) (extraMemory: int64 array) (outputs: int64 list) (relativeBase: int) =
-            // printfn "%A, %A" acc
-            // printfn "  -- Outputs: %A" outputs
+    let runProgram (getInput: GetInput) (initialState: State) =
+        let rec runNextInstruction (state: State) =
+            let { CurrentIndex = i; Memory = acc; ExtraMemory = extraMemory; RelativeBase = relativeBase } = state
 
-            // Threading.Thread.Sleep(100)
-
-            // printfn "Current memory index: %A" i
-
-            if i >= acc.Length then
-                { Outputs = outputs
-                  Memory = acc
-                  ExtraMemory = extraMemory
-                  CurrentIndex = i + 1
-                  RelativeBase = relativeBase }
-            elif outputs.Length = 2 then
-                { Outputs = outputs
-                  Memory = acc
-                  ExtraMemory = extraMemory
-                  CurrentIndex = i
-                  RelativeBase = relativeBase }
+            if state.CurrentIndex >= initialState.Memory.Length then
+                { state with CurrentIndex = state.CurrentIndex + 1 }
+            elif state.Outputs.Length = 2 then // todo: fix this stop condition
+                state
             else
-                let op = parseOperation getInput acc i (int acc.[i])
-                // printfn "  Do: %A" op
-                // printfn "  -- Next Operation (%A): %A" acc.[i] op
+                let op = parseOperation getInput state (int acc.[i])
                 let getFromMemory = getValue acc extraMemory relativeBase
-                let save = saveIntoMemory acc extraMemory relativeBase
+                let save = saveIntoMemory state
                 match op with
                 | Add p ->
                     let a = getFromMemory p.Left
                     let b = getFromMemory p.Right
                     let output = a + b
                     save p.Output output
-                    apply (i + 4) acc extraMemory outputs relativeBase
+                    runNextInstruction { state with CurrentIndex = state.CurrentIndex + 4 }
                 | Multiply p ->
                     let a = getFromMemory p.Left
                     let b = getFromMemory p.Right
                     let output = a * b
                     save p.Output output
-                    apply (i + 4) acc extraMemory outputs relativeBase
+                    runNextInstruction { state with CurrentIndex = state.CurrentIndex + 4 }
                 | Save input ->
                     save input.Position input.Value
-                    apply (i + 2) acc extraMemory outputs relativeBase
+                    runNextInstruction { state with CurrentIndex = state.CurrentIndex + 2 }
                 | JumpIfTrue cmd ->
                     if getFromMemory cmd.Predicate <> 0L then
                         let jumpTo = getFromMemory cmd.To |> int
-                        apply jumpTo acc extraMemory outputs relativeBase
+                        runNextInstruction { state with CurrentIndex = jumpTo }
                     else
-                        apply (i + 3) acc extraMemory outputs relativeBase
+                        runNextInstruction { state with CurrentIndex = state.CurrentIndex + 3 }
                 | JumpIfFalse cmd ->
                     if getFromMemory cmd.Predicate = 0L then
                         let jumpTo = getFromMemory cmd.To |> int
-                        apply jumpTo acc extraMemory outputs relativeBase
+                        runNextInstruction { state with CurrentIndex = jumpTo }
                     else
-                        apply (i + 3) acc extraMemory outputs relativeBase
+                        runNextInstruction { state with CurrentIndex = state.CurrentIndex + 3 }
                 | LessThan cmd ->
                     let v =
-                        if getFromMemory cmd.Left < getFromMemory cmd.Right then 1L
+                        if getFromMemory cmd.Left < getFromMemory cmd.Right
+                        then 1L
                         else 0L
                     save cmd.Output v
-                    apply (i + 4) acc extraMemory outputs relativeBase
+                    runNextInstruction { state with CurrentIndex = state.CurrentIndex + 4 }
                 | Equals cmd ->
                     let v =
-                        if getFromMemory cmd.Left = getFromMemory cmd.Right then 1L
+                        if getFromMemory cmd.Left = getFromMemory cmd.Right
+                        then 1L
                         else 0L
                     save cmd.Output v
-                    apply (i + 4) acc extraMemory outputs relativeBase
+                    runNextInstruction { state with CurrentIndex = state.CurrentIndex + 4 }
                 | Output output ->
                     let v = getFromMemory output.Position
-                    // printfn "  -> Output: %A" v
-                    apply (i + 2) acc extraMemory (List.append outputs [ v ]) relativeBase
+                    let outputs = List.append state.Outputs [ v ]
+                    runNextInstruction
+                        { state with
+                              CurrentIndex = state.CurrentIndex + 2
+                              Outputs = outputs }
                 | AdjustRelativeBase p ->
                     let v = getFromMemory p |> int
-                    apply (i + 2) acc extraMemory outputs (relativeBase + v)
-                | Halt ->
-                    // acc, outputs
-                    { Outputs = outputs
-                      Memory = acc
-                      ExtraMemory = extraMemory
-                      CurrentIndex = i + 1
-                      RelativeBase = relativeBase }
+                    runNextInstruction
+                        { state with
+                              CurrentIndex = state.CurrentIndex + 2
+                              RelativeBase = state.RelativeBase + v }
+                | Halt -> { state with CurrentIndex = state.CurrentIndex + 1 }
 
-        apply initialIndex initialMemory initialExtraMemory List.empty initialRelativeBase
+        initialState |> runNextInstruction
 
 
-    let run (memory: int64 array) (extraMemory: int64 array) (index: int) (inputReader: GetInput)
-        (relativeBase: int) = parse inputReader memory extraMemory index relativeBase
+    let run (memory: int64 array) (extraMemory: int64 array) (index: int) (inputReader: GetInput) (relativeBase: int) =
+        let initialState =
+            { Outputs = List.empty
+              Memory = memory
+              ExtraMemory = extraMemory
+              CurrentIndex = index
+              RelativeBase = relativeBase }
+        initialState |> runProgram inputReader
