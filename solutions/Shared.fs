@@ -12,6 +12,11 @@ type Coordinate =
     { x: int
       y: int }
 
+type Coordinate3D =
+    { x: int
+      y: int
+      z: int }
+
 module Shared =
     let parseIntcodeInput (input: string list) =
         input
