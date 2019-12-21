@@ -128,4 +128,23 @@ module Puzzle12 =
 
     let solveA (input: string list) = input |> energyAfter 1000
 
-    let solveB (input: string list) = 1
+    let solveB (input: string list) =
+        let initialState =
+            input
+            |> List.map (parseCoordinate)
+            |> List.mapi (fun i c ->
+                { Id = i
+                  Position = c
+                  Velocity =
+                      { x = 0
+                        y = 0
+                        z = 0 } })
+
+        let rec helper (state: Moon list) (counter: int) (seen: Moon list Set) =
+            // This needs to be calculated as brute force is too slow.
+            let newState = state |> advanceOneStep
+            if seen |> Set.contains newState
+            then counter
+            else helper newState (counter + 1) (seen |> Set.add newState)
+
+        helper initialState 0 Set.empty
