@@ -50,6 +50,10 @@ module Intcode =
           CurrentIndex: int
           RelativeBase: int }
 
+    type Signal = Stop
+
+    type SignalReader = State -> Signal option
+
     let parseParameter (memory: int64 array) (index: int) (paramMode: int) =
         match paramMode with
         | 0 -> Parameter.Position(int memory.[index])
@@ -189,13 +193,14 @@ module Intcode =
         let p = getPosition state.RelativeBase position
         if p >= state.Memory.Length then state.ExtraMemory.[p] <- value else state.Memory.[p] <- value
 
-    let runProgram (getInput: GetInput) (initialState: State) =
+    let runProgram (getInput: GetInput) (signalReader: SignalReader) (initialState: State) =
         let rec runNextInstruction (state: State) =
             let { CurrentIndex = i; Memory = acc; ExtraMemory = extraMemory; RelativeBase = relativeBase } = state
 
             if state.CurrentIndex >= initialState.Memory.Length then
                 { state with CurrentIndex = state.CurrentIndex + 1 }
-            elif state.Outputs.Length = 2 then // todo: fix this stop condition
+            elif state
+                 |> signalReader = Some Stop then
                 state
             else
                 let op = parseOperation getInput state (int acc.[i])
@@ -262,10 +267,14 @@ module Intcode =
 
 
     let run (memory: int64 array) (extraMemory: int64 array) (index: int) (inputReader: GetInput) (relativeBase: int) =
+        let signalReader =
+            (fun (state: State) -> if state.Outputs.Length = 2 then Some Stop else None)
+
         let initialState =
             { Outputs = List.empty
               Memory = memory
               ExtraMemory = extraMemory
               CurrentIndex = index
               RelativeBase = relativeBase }
-        initialState |> runProgram inputReader
+
+        initialState |> runProgram inputReader signalReader
