@@ -266,15 +266,7 @@ module Intcode =
         initialState |> runNextInstruction
 
 
-    let run (memory: int64 array) (extraMemory: int64 array) (index: int) (inputReader: GetInput) (relativeBase: int) =
+    let run (initialState: State) (inputReader: GetInput) =
         let signalReader =
             (fun (state: State) -> if state.Outputs.Length = 2 then Some Stop else None)
-
-        let initialState =
-            { Outputs = List.empty
-              Memory = memory
-              ExtraMemory = extraMemory
-              CurrentIndex = index
-              RelativeBase = relativeBase }
-
         initialState |> runProgram inputReader signalReader

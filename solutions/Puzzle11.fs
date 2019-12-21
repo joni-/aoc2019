@@ -15,20 +15,17 @@ module Puzzle11 =
         | RIGHT -> { coordinate with x = coordinate.x + amount }
 
     let run (initialPanelColors: Map<Coordinate, Color>) (initialMemory: int64 array) =
-        let rec helper (memory: int64 array) (extraMemory: int64 array) (index: int) (relativeBase: int)
-                (panelColors: Map<Coordinate, Color>) (instructions: (Coordinate * Color) list) (position: Coordinate)
-                (direction: Direction) =
+        let rec helper (state: Intcode.State) (panelColors: Map<Coordinate, Color>)
+                (instructions: (Coordinate * Color) list) (position: Coordinate) (direction: Direction) =
             let currentPanelColor =
                 match panelColors |> Map.tryFind position with
                 | Some c -> c
                 | None -> BLACK
 
             let inputReader =
-                (fun _ ->
-                if currentPanelColor = BLACK then 0L
-                else 1L)
+                (fun _ -> if currentPanelColor = BLACK then 0L else 1L)
 
-            let intcodeResult = Intcode.run memory extraMemory index inputReader relativeBase
+            let intcodeResult = Intcode.run state inputReader
 
             if List.isEmpty intcodeResult.Outputs then
                 panelColors, instructions
@@ -68,10 +65,17 @@ module Puzzle11 =
                         |> raise
 
                 let nextPosition = move position 1 nextDirection
-                helper intcodeResult.Memory intcodeResult.ExtraMemory intcodeResult.CurrentIndex
-                    intcodeResult.RelativeBase newPanelColors newInstructions nextPosition nextDirection
+                helper { intcodeResult with Outputs = List.empty } newPanelColors newInstructions nextPosition
+                    nextDirection
 
-        helper initialMemory (Array.zeroCreate 1000000) 0 0 initialPanelColors List.empty
+        let initialState: Intcode.State =
+            { Outputs = List.empty
+              Memory = initialMemory
+              ExtraMemory = (Array.zeroCreate 1000000)
+              CurrentIndex = 0
+              RelativeBase = 0 }
+
+        helper initialState initialPanelColors List.empty
             { x = 0
               y = 0 } UP
 
