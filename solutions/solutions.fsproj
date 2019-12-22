@@ -18,6 +18,7 @@
     <Compile Include="Puzzle10.fs" />
     <Compile Include="Puzzle11.fs" />
     <Compile Include="Puzzle12.fs" />
+    <Compile Include="Puzzle13.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
 </Project>

@@ -46,7 +46,7 @@ module Shared =
         let initialState: Intcode.State =
             { Outputs = List.empty
               Memory = memory
-              ExtraMemory = (Array.zeroCreate 0)
+              ExtraMemory = (Array.zeroCreate 10000)
               CurrentIndex = 0
               RelativeBase = 0 }
         Intcode.run initialState (inputReader()) emptySignalReader |> (fun r -> r.Outputs)
