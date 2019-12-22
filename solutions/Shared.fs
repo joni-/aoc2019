@@ -37,6 +37,8 @@ module Shared =
                     |> Exception
                     |> raise))
 
+    let emptySignalReader (state: Intcode.State) = None
+
     let simpleIntcodeRun (inputs: int64 list) (input: string list) =
         let inputReader = inputs |> createInputReader
         let memory = input |> parseIntcodeInput
@@ -47,7 +49,7 @@ module Shared =
               ExtraMemory = (Array.zeroCreate 0)
               CurrentIndex = 0
               RelativeBase = 0 }
-        Intcode.run initialState (inputReader()) |> (fun r -> r.Outputs)
+        Intcode.run initialState (inputReader()) emptySignalReader |> (fun r -> r.Outputs)
 
     let simpleIntcodeRunReturnMemory (inputs: int64 list) (input: string list) =
         let inputReader = inputs |> createInputReader
@@ -59,4 +61,4 @@ module Shared =
               ExtraMemory = (Array.zeroCreate 0)
               CurrentIndex = 0
               RelativeBase = 0 }
-        Intcode.run initialState (inputReader()) |> (fun r -> r.Memory)
+        Intcode.run initialState (inputReader()) emptySignalReader |> (fun r -> r.Memory)

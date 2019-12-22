@@ -54,6 +54,12 @@ module Intcode =
 
     type SignalReader = State -> Signal option
 
+    type OutputReader = int64 -> unit
+
+    type OutputReaderObject =
+        { Read: OutputReader
+          Current: unit -> int64 list }
+
     let parseParameter (memory: int64 array) (index: int) (paramMode: int) =
         match paramMode with
         | 0 -> Parameter.Position(int memory.[index])
@@ -193,7 +199,8 @@ module Intcode =
         let p = getPosition state.RelativeBase position
         if p >= state.Memory.Length then state.ExtraMemory.[p] <- value else state.Memory.[p] <- value
 
-    let runProgram (getInput: GetInput) (signalReader: SignalReader) (initialState: State) =
+    let runProgram (getInput: GetInput) (signalReader: SignalReader) (outputReader: OutputReaderObject)
+        (initialState: State) =
         let rec runNextInstruction (state: State) =
             let { CurrentIndex = i; Memory = acc; ExtraMemory = extraMemory; RelativeBase = relativeBase } = state
 
@@ -250,11 +257,11 @@ module Intcode =
                     runNextInstruction { state with CurrentIndex = state.CurrentIndex + 4 }
                 | Output output ->
                     let v = getFromMemory output.Position
-                    let outputs = List.append state.Outputs [ v ]
+                    outputReader.Read v
                     runNextInstruction
                         { state with
                               CurrentIndex = state.CurrentIndex + 2
-                              Outputs = outputs }
+                              Outputs = outputReader.Current() }
                 | AdjustRelativeBase p ->
                     let v = getFromMemory p |> int
                     runNextInstruction
@@ -265,8 +272,15 @@ module Intcode =
 
         initialState |> runNextInstruction
 
+    let run (initialState: State) (inputReader: GetInput) (signalReader: SignalReader) =
+        let outputReader =
+            (fun _ ->
+                let mutable outputs = List.empty
 
-    let run (initialState: State) (inputReader: GetInput) =
-        let signalReader =
-            (fun (state: State) -> if state.Outputs.Length = 2 then Some Stop else None)
-        initialState |> runProgram inputReader signalReader
+                let reader = (fun (v: int64) -> outputs <- List.append outputs [ v ])
+
+                let currentOutputs = (fun _ -> outputs |> List.map id)
+                { Read = reader
+                  Current = currentOutputs })
+
+        initialState |> runProgram inputReader signalReader (outputReader())

@@ -15,6 +15,9 @@ module Puzzle11 =
         | RIGHT -> { coordinate with x = coordinate.x + amount }
 
     let run (initialPanelColors: Map<Coordinate, Color>) (initialMemory: int64 array) =
+        let signalReader (state: Intcode.State) =
+            if state.Outputs.Length = 2 then Some Intcode.Signal.Stop else None
+
         let rec helper (state: Intcode.State) (panelColors: Map<Coordinate, Color>)
                 (instructions: (Coordinate * Color) list) (position: Coordinate) (direction: Direction) =
             let currentPanelColor =
@@ -25,7 +28,7 @@ module Puzzle11 =
             let inputReader =
                 (fun _ -> if currentPanelColor = BLACK then 0L else 1L)
 
-            let intcodeResult = Intcode.run state inputReader
+            let intcodeResult = Intcode.run state inputReader signalReader
 
             if List.isEmpty intcodeResult.Outputs then
                 panelColors, instructions
