@@ -41,14 +41,14 @@ module Intcode =
         | AdjustRelativeBase of Parameter
         | Halt
 
-    type GetInput = unit -> int64
-
     type State =
         { Outputs: int64 list
           Memory: int64 array
           ExtraMemory: int64 array
           CurrentIndex: int
           RelativeBase: int }
+
+    type GetInput = State -> int64
 
     type Signal = Stop
 
@@ -95,11 +95,11 @@ module Intcode =
         match instructionList with
         | [ 3 ] ->
             Save
-                { Value = getInput()
+                { Value = getInput state
                   Position = Position(int memory.[index + 1]) }
         | [ 2; 0; 3 ] ->
             Save
-                { Value = getInput()
+                { Value = getInput state
                   Position = Relative(int memory.[index + 1]) }
 
         | [ 4 ] -> Output { Position = Parameter.Position(int memory.[index + 1]) }
