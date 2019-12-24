@@ -62,3 +62,5 @@ module Shared =
               CurrentIndex = 0
               RelativeBase = 0 }
         Intcode.run initialState (inputReader()) emptySignalReader |> (fun r -> r.Memory)
+
+    let flatten (l: 'a list list) = l |> List.collect (fun a -> a |> List.map (fun b -> b))
